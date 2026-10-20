@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Warung Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6 max-w-4xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800">🛒 Warung Kelontong Kita</h1>
+            <p class="text-gray-600">Kelola produk warung dengan cepat dan mudah</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Form Tambah Produk -->
+            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-1">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Tambah Produk</h2>
+                <form id="productForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Nama Produk</label>
+                        <input type="text" id="name" required class="w-full mt-1 p-2 border rounded-md focus:ring focus:ring-blue-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Harga (Rp)</label>
+                        <input type="number" id="price" required class="w-full mt-1 p-2 border rounded-md focus:ring focus:ring-blue-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Stok</label>
+                        <input type="number" id="stock" required class="w-full mt-1 p-2 border rounded-md focus:ring focus:ring-blue-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Kategori</label>
+                        <input type="text" id="category" class="w-full mt-1 p-2 border rounded-md focus:ring focus:ring-blue-300" placeholder="Contoh: Sembako">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition">Simpan Produk</button>
+                </form>
+            </div>
+
+            <!-- Daftar Produk -->
+            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Daftar Barang Warung</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-600 text-sm">
+                                <th class="p-3">Nama</th>
+                                <th class="p-3">Kategori</th>
+                                <th class="p-3">Harga</th>
+                                <th class="p-3">Stok</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productList" class="divide-y divide-gray-200 text-sm">
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-gray-500">Memuat data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                const result = await response.json();
+                const tbody = document.getElementById('productList');
+                
+                if (result.success && result.data.length > 0) {
+                    tbody.innerHTML = result.data.map(item => `
+                        <tr>
+                            <td class="p-3 font-medium text-gray-800">${item.name}</td>
+                            <td class="p-3 text-gray-600">${item.category || '-'}</td>
+                            <td class="p-3 text-gray-600">Rp ${Number(item.price).toLocaleString('id-ID')}</td>
+                            <td class="p-3 text-gray-600">${item.stock}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Belum ada produk di warung.</td></tr>`;
+                }
+            } catch (error) {
+                console.error('Gagal memuat produk:', error);
+            }
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const price = document.getElementById('price').value;
+            const stock = document.getElementById('stock').value;
+            const category = document.getElementById('category').value;
+
+            try {
+                const response = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, price, stock, category })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('productForm').reset();
+                    fetchProducts();
+                } else {
+                    alert('Gagal menambah produk: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan jaringan');
+            }
+        });
+
+        // Load data saat halaman dibuka
+        fetchProducts();
+    </script>
+</body>
+</html>

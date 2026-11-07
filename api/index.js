@@ -1,17 +1,16 @@
 const admin = require('firebase-admin');
 
-// Inisialisasi Firebase Admin SDK
-// Pastikan Anda sudah menyiapkan Environment Variables di Vercel:
-// FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
+// Inisialisasi Firebase Admin SDK menggunakan FIREBASE_SERVICE_ACCOUNT JSON string
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      // Mengatasi masalah newline (\n) pada private key di environment variable
-      privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
-    }),
-  });
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (error) {
+    console.error('Gagal memparsing FIREBASE_SERVICE_ACCOUNT:', error);
+  }
 }
 
 const db = admin.firestore();
